@@ -38,15 +38,24 @@ data["price"] = data["price"].str.replace("$", "", regex=False).astype(float)
 data["sales"] = data["price"] * data["quantity"]
 
 # -----------------------------
-# Step 6: Select required fields
+# Step 6: Aggregate sales by date and region
 # -----------------------------
-final_df = data[["sales", "date", "region"]]
+final_df = (
+    data.groupby(["date", "region"], as_index=False)["sales"]
+    .sum()
+)
 
 # -----------------------------
-# Step 7: Save final output
+# Step 7: Reorder columns (IMPORTANT)
+# -----------------------------
+final_df = final_df[["sales", "date", "region"]]
+
+# -----------------------------
+# Step 8: Save final output
 # -----------------------------
 output_path = os.path.join(script_dir, "pink_morsel_sales.csv")
 final_df.to_csv(output_path, index=False)
 
-print("Task 2 complete. Output saved as pink_morsel_sales.csv")
+print("Task 2 complete.")
+print("Output saved as pink_morsel_sales.csv")
 print("Final shape:", final_df.shape)
