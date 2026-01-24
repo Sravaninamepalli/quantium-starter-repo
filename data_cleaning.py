@@ -2,8 +2,8 @@ from pathlib import Path
 import pandas as pd
 import sys
 
-script_dir = Path(__file__).resolve().parent   # directory where the script lives
-data_dir = script_dir / "data"                  # adjust if your data folder is somewhere else
+script_dir = Path(__file__).resolve().parent   
+data_dir = script_dir / "data"                  
 
 print("Script directory:", script_dir)
 print("Looking for CSVs in:", data_dir)
