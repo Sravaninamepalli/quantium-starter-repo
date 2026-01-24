@@ -1,34 +1,52 @@
-from pathlib import Path
 import pandas as pd
-import sys
+import glob
+import os
 
-script_dir = Path(__file__).resolve().parent   
-data_dir = script_dir / "data"                  
+# -----------------------------
+# Step 1: Locate CSV files
+# -----------------------------
+script_dir = os.path.dirname(os.path.abspath(__file__))
+data_dir = os.path.join(script_dir, "data")
 
-print("Script directory:", script_dir)
-print("Looking for CSVs in:", data_dir)
+csv_files = glob.glob(os.path.join(data_dir, "*.csv"))
 
-if not data_dir.exists():
-    print("Data directory does not exist:", data_dir)
-    sys.exit(1)
+print("Found CSV files:", csv_files)
 
-csv_files = sorted(data_dir.glob("*.csv"))
-print("Found CSV files:", [str(p.name) for p in csv_files])
-
-if not csv_files:
-    raise FileNotFoundError(f"No CSV files found in {data_dir}. Check path and working directory.")
-
+# -----------------------------
+# Step 2: Read and combine CSVs
+# -----------------------------
 dfs = []
-for p in csv_files:
-    try:
-        df = pd.read_csv(p, parse_dates=["date"])  # parse_dates optional
-        print(f"Read {p.name} -> shape: {df.shape}")
-        dfs.append(df)
-    except Exception as e:
-        print(f"Failed to read {p}: {e}")
+for file in csv_files:
+    df = pd.read_csv(file)
+    dfs.append(df)
 
-if not dfs:
-    raise ValueError("No dataframes were read successfully; nothing to concatenate.")
+data = pd.concat(dfs, ignore_index=True)
 
-all_data = pd.concat(dfs, ignore_index=True)
-print("Concatenated dataframe shape:", all_data.shape)
+# -----------------------------
+# Step 3: Filter only Pink Morsels
+# -----------------------------
+data = data[data["product"] == "pink morsel"]
+
+# -----------------------------
+# Step 4: Clean price column
+# -----------------------------
+data["price"] = data["price"].str.replace("$", "", regex=False).astype(float)
+
+# -----------------------------
+# Step 5: Create sales column
+# -----------------------------
+data["sales"] = data["price"] * data["quantity"]
+
+# -----------------------------
+# Step 6: Select required fields
+# -----------------------------
+final_df = data[["sales", "date", "region"]]
+
+# -----------------------------
+# Step 7: Save final output
+# -----------------------------
+output_path = os.path.join(script_dir, "pink_morsel_sales.csv")
+final_df.to_csv(output_path, index=False)
+
+print("Task 2 complete. Output saved as pink_morsel_sales.csv")
+print("Final shape:", final_df.shape)
